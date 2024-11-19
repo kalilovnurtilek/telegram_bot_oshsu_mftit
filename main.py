@@ -1,7 +1,7 @@
 import asyncio
 import logging
 
-from aiogram import Bot
+from aiogram import Bot, F
 from aiogram import Dispatcher
 from aiogram import types
 from aiogram.filters import CommandStart, Command
@@ -51,7 +51,7 @@ async def handle_help(message: types.Message):
         parse_mode = ParseMode.MARKDOWN_V2
         )
 
-@dp.message(Command("code"))
+@dp.message(Command("code", prefix="/!%"))
 async def handle_command_code(message: types.Message):
     text= markdown.text(
         "Here's Python code",
@@ -79,7 +79,16 @@ async def handle_command_code(message:types.Message):
         sep="\n"
          )
     await message.answer(text=text)
-    
+
+# def is_photo(message:types.Message):
+#     return message.photo
+@dp.message(F.photo, ~F.caption)
+async def handle_photo_wo_caption(message:types.Message):
+    await message.reply("Dont't ")
+
+@dp.message(F.photo ,F.caption.contains("please"))
+async def handle_message(message:types.Message):
+    await message.reply("I can't see , sorry . Could you describe it please")
 
 @dp.message()
 async def echo_message(message:types.Message):
@@ -103,7 +112,9 @@ async def echo_message(message:types.Message):
     #         entities=message.entities,
     #     )
     try:
-        await message.send_copy(chat_id=message.chat.id)
+        # await message.copy_to(chat_id=message.chat.id)
+        await message.forward(chat_id=message.chat.id)
+        # await message.send_copy(chat_id=message.chat.id)
     except TypeError:
         await message.reply(text = "Somthing new ..")
    
