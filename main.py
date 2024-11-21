@@ -81,10 +81,19 @@ async def handle_command_code(message:types.Message):
     await message.answer(text=text)
 
 # def is_photo(message:types.Message):
-#     return message.photo
-@dp.message(F.photo, ~F.caption)
+#     if not message.photo:
+#         return False
+#     if not message.caption:
+#         return False
+#     return "please" in message .caption
+
+any_media_filter = F.photo | F.video  | F.document
+
+
+
+@dp.message(any_media_filter, ~F.caption)
 async def handle_photo_wo_caption(message:types.Message):
-    await message.reply("Dont't ")
+    await message.reply("I can't see ")
 
 @dp.message(F.photo ,F.caption.contains("please"))
 async def handle_message(message:types.Message):
@@ -127,8 +136,6 @@ async def main():
     logging.basicConfig(level=logging.INFO)
     await dp.start_polling(bot)
 
-
-    
 
 
 if __name__ == "__main__":
