@@ -1,6 +1,8 @@
 import asyncio
 import logging
 
+from magic_filter import RegexpMode
+from re import Match
 from aiogram import Bot, F
 from aiogram import Dispatcher
 from aiogram import types
@@ -14,6 +16,7 @@ dp = Dispatcher()
 
 @dp.message(CommandStart())
 async def handle_start(message: types.Message):
+ 
     url = "https://w7.pngwing.com/pngs/332/245/png-transparent-robot-waving-hand-bot-robot-thumbnail.png"
     await message.answer(
         text=f"{markdown.hide_link(url)}Hello , {markdown.hbold( message.from_user.full_name)}",
@@ -95,10 +98,20 @@ any_media_filter = F.photo | F.video  | F.document
 async def handle_photo_wo_caption(message:types.Message):
     await message.reply("I can't see ")
 
-@dp.message(F.photo ,F.caption.contains("please"))
-async def handle_message(message:types.Message):
-    await message.reply("I can't see , sorry . Could you describe it please")
+@dp.message(any_media_filter,F.caption)
+async def handle_any_media_w_caption(message:types.Message):
+    await message.reply(f"Smth in on media. Your text : {message.caption !r}")
 
+@dp.message(F.text == "secret")
+# F.from_user.id.in_({42 ,990282097}), 
+
+async def secret_admin_message(message: types.Message):
+    print(message.from_user.id)
+    await message.reply("Hi admin")
+    
+@dp.message(F.text.regexp(r"(\d+),mode=RegexpMode.FINDALL").as_("code"))
+async def handle_code(message:types.Message , code : list[str]):
+    await message.reply(f"Your code :{code}")
 @dp.message()
 async def echo_message(message:types.Message):
     # await message.bot.send_message(
@@ -110,7 +123,7 @@ async def echo_message(message:types.Message):
     #   text="Detected message...",
     #   reply_to_message_id= message.message_id,  
     # )
-
+   
     await message.answer(
         text="Wait a second..."
         )
