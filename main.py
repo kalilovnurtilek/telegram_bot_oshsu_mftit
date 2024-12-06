@@ -10,16 +10,17 @@ from aiogram.filters import CommandStart, Command
 from aiogram.utils import markdown
 from aiogram.enums import ParseMode , parse_mode
 from config import bot_token 
+from aiogram.types import ReplyKeyboardMarkup , InlineKeyboardButton
 
 
 dp = Dispatcher()
 
-@dp.message(CommandStart())
+@dp.message(CommandStart()) 
 async def handle_start(message: types.Message):
  
     url = "https://w7.pngwing.com/pngs/332/245/png-transparent-robot-waving-hand-bot-robot-thumbnail.png"
     await message.answer(
-        text=f"{markdown.hide_link(url)}Hello , {markdown.hbold( message.from_user.full_name)}",
+        text=f"{markdown.hide_link(url)}Здравствуйте , {markdown.hbold( message.from_user.full_name)}, я ваш бот помощник от дирекции МФТИТ ОшГУ",
         parse_mode= ParseMode.HTML,
         )
 @dp.message(Command('help'))
@@ -90,13 +91,39 @@ async def handle_command_code(message:types.Message):
 #         return False
 #     return "please" in message .caption
 
+@dp.message(Command("pic"))
+async def handle_command_pic(message: types.Message):
+    url="https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg"
+    await message.reply_photo(
+        photo=url,
+        caption ="Cat small pic", )
+
+
+@dp.message(F.photo, ~F.caption)
+async def handle_photo_with_please_caption(message: types.Message):
+    caption = "Извините я рне могу определить это фото"
+    await message.reply_photo(
+        photo=message.photo[-1].file_id,
+        caption=caption, 
+    )
+
+
 any_media_filter = F.photo | F.video  | F.document
 
 
 
 @dp.message(any_media_filter, ~F.caption)
 async def handle_photo_wo_caption(message:types.Message):
-    await message.reply("I can't see ")
+        if message.document:    
+            await message.reply_document(
+            document=message.document.file_id)
+        elif message.video:
+            await message.reply_video(
+                video = message.video.file_id
+            )
+        else:
+            await message.reply("I can't see")
+    
 
 @dp.message(any_media_filter,F.caption)
 async def handle_any_media_w_caption(message:types.Message):
@@ -150,7 +177,7 @@ async def main():
     await dp.start_polling(bot)
 
 
-
 if __name__ == "__main__":
     asyncio.run(main())
 
+   
