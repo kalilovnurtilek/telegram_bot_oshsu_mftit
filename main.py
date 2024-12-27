@@ -98,6 +98,26 @@ async def statemend_help(message: types.Message):
     )
     logging.info(f"/statement обработан для пользователя {full_name}")
 
+
+@dp.message(Command("reference"))
+async def statemend_help(message: types.Message):
+    logging.info("Обработан /referemce командой.")
+    full_name = message.from_user.full_name or "Гость"
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[ 
+        [InlineKeyboardButton(text="Каникулярдык справка", url = "https://drive.google.com/file/d/1VLt9X84a0QcJFMWro4jTSUvypSJ51iL6/view?usp=sharing")],
+        [InlineKeyboardButton(text="Окуп жатканын тастыктоочу ", url = "https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg")],
+   
+    ])
+    await message.answer(
+        text=f"Урматтуу , {markdown.hbold(full_name)},маалымкаттарды чыгаруу боюнча маалыматтар бул жерде ",
+        parse_mode=ParseMode.HTML,
+        reply_markup=keyboard,
+    )
+    logging.info(f"/reference обработан для пользователя {full_name}")
+
+
+
+
 # Основной метод запуска бота
 async def main() -> None:
     bot = Bot(token=bot_token)
