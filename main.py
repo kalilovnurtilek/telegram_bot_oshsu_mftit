@@ -1,7 +1,7 @@
 import asyncio
 import logging
 import sqlite3
-from aiogram import Bot, Dispatcher, types
+from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import CommandStart, Command
 from aiogram.utils import markdown
 from aiogram.enums import ParseMode
@@ -30,6 +30,15 @@ def create_table():
             start_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS feedback (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            full_name TEXT,
+            feedback TEXT,
+            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
     conn.commit()
     conn.close()
 
@@ -44,6 +53,17 @@ def add_user(user_id, full_name, username):
     conn.commit()
     conn.close()
 
+# Добавление обратной связи в базу данных
+def add_feedback(user_id, full_name, feedback):
+    conn = db_connect()
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT INTO feedback (user_id, full_name, feedback)
+        VALUES (?, ?, ?)
+    ''', (user_id, full_name, feedback))
+    conn.commit()
+    conn.close()
+
 # Обработчик /start с кнопками
 @dp.message(CommandStart())
 async def handle_start(message: types.Message) -> None:
@@ -55,43 +75,57 @@ async def handle_start(message: types.Message) -> None:
     # Добавляем пользователя в базу данных
     add_user(message.from_user.id, full_name, username)
 
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="Сунуш, арыздарыныз болсо ушул баскычты басып калтырыңыз", callback_data="feedback")],
+        [InlineKeyboardButton(text="Маалымкаттар (справка)", callback_data="reference")],
+        [InlineKeyboardButton(text="Арыздардын үлгүлөрү", callback_data="statement")]
+    ])
+
     await message.answer(
         parse_mode=ParseMode.HTML,
-        text=f"""{markdown.hide_link(url)}Саламатсызбы, {markdown.hbold(full_name)}, мен МФТИТ тарабынан түзүлгөн жардамчы ботмун, эгерде жардам керек болсо төмөндөгү командаларды басыңыз
-    /statement - Арыздардын үлгүлөрү
-    /reference - Маалымкаттар (справка) боюнча маалымат
-        """,
+        text=f"""{markdown.hide_link(url)}Саламатсызбы, {markdown.hbold(full_name)}, мен МФТИТ тарабынан түзүлгөн жардамчы ботмун, эгерде жардам керек болсо төмөндөгү командаларды басыңыз""",
+        reply_markup=keyboard
     )
     logging.info(f"/start обработан для пользователя {full_name}")
 
-# Пример команды для получения информации из базы данных
-@dp.message(Command("userinfo"))
-async def user_info(message: types.Message):
-    user_id = message.from_user.id
-    conn = db_connect()
-    cursor = conn.cursor()
-    cursor.execute('SELECT full_name, username, start_time FROM users WHERE id = ?', (user_id,))
-    user = cursor.fetchone()
-    conn.close()
+# Обработчик обратной связи
+@dp.callback_query(lambda c: c.data == "feedback")
+async def handle_feedback(callback_query: types.CallbackQuery):
+    await callback_query.message.answer("Сунуш-арыздарды калтырыңыз...")
 
-    if user:
-        await message.answer(f"Информация о пользователе:\n\nИмя: {user[0]}\nИмя пользователя: {user[1]}\nДата регистрации: {user[2]}")
-    else:
-        await message.answer("Пользователь не найден в базе данных.")
+    @dp.message()
+    async def get_feedback(message: types.Message):
+        full_name = message.from_user.full_name or "Гость"
+        add_feedback(message.from_user.id, full_name, message.text)
+        await message.answer("Чоон рахмат , сиздин жазгандарыңыз маалыматтар базасында сакталып калды!")
 
-# Другие обработчики команд
-@dp.message(Command("statement"))
-async def statemend_help(message: types.Message):
-    logging.info("Обработан /statement командой.")
-    full_name = message.from_user.full_name or "Гость"
+# Обработчик справок
+@dp.callback_query(lambda c: c.data == "reference")
+async def reference_help(callback_query: types.CallbackQuery):
+    full_name = callback_query.from_user.full_name or "Гость"
     keyboard = InlineKeyboardMarkup(inline_keyboard=[ 
-        [InlineKeyboardButton(text="Академиялык өргүүгө чыгуу үчүн арыз", url = "https://drive.google.com/file/d/1VLt9X84a0QcJFMWro4jTSUvypSJ51iL6/view?usp=sharing")],
-        [InlineKeyboardButton(text="Академиялык өргүүдөн кайтуу үчүн арыз", url = "https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg")],
-        [InlineKeyboardButton(text="Сабактардан уруксат сураа үчүн арыз", url = "https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg")],
-        [InlineKeyboardButton(text="Фамилияны avn ден өзгөртүү үчүн арыз", url = "https://drive.google.com/file/d/1D7UGgqOACZoByGkjlJ3JdEHup11Hsm-P/view?usp=sharing")],
-        [InlineKeyboardButton(text="Окуудан четтетүү үчүн арыз",url = "https://drive.google.com/file/d/1OBHGfo77DYpjefORGp_XoqnWctQLL_mX/view?usp=sharing")]
+        [InlineKeyboardButton(text="Каникулярдык справка", url="https://drive.google.com/file/d/1VLt9X84a0QcJFMWro4jTSUvypSJ51iL6/view?usp=sharing")],
+        [InlineKeyboardButton(text="Окуп жатканын тастыктоочу ", url="https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg")],
     ])
-    await message.answer(
+    await callback_query.message.answer(
+        text=f"Урматтуу , {markdown.hbold(full_name)},маалымкаттарды чыгаруу боюнча маалыматтар бул жерде",
+        parse_mode=ParseMode.HTML,
+        reply_markup=keyboard,
+    )
+    logging.info(f"/reference обработан для пользователя {full_name}")
+
+# Обработчик образцов заявлений
+@dp.callback_query(lambda c: c.data == "statement")
+async def statement_help(callback_query: types.CallbackQuery):
+    full_name = callback_query.from_user.full_name or "Гость"
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[ 
+        [InlineKeyboardButton(text="Академиялык өргүүгө чыгуу үчүн арыз", url="https://drive.google.com/file/d/1VLt9X84a0QcJFMWro4jTSUvypSJ51iL6/view?usp=sharing")],
+        [InlineKeyboardButton(text="Академиялык өргүүдөн кайтуу үчүн арыз", url="https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg")],
+        [InlineKeyboardButton(text="Сабактардан уруксат сураа үчүн арыз", url="https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg")],
+        [InlineKeyboardButton(text="Фамилияны avn ден өзгөртүү үчүн арыз", url="https://drive.google.com/file/d/1D7UGgqOACZoByGkjlJ3JdEHup11Hsm-P/view?usp=sharing")],
+        [InlineKeyboardButton(text="Окуудан четтетүү үчүн арыз", url="https://drive.google.com/file/d/1OBHGfo77DYpjefORGp_XoqnWctQLL_mX/view?usp=sharing")]
+    ])
+    await callback_query.message.answer(
         text=f"Урматтуу , {markdown.hbold(full_name)},төмөндөгү арыздардын үлгүлөрү , өзүңүзгө керектүү арызды алсаңыз болот",
         parse_mode=ParseMode.HTML,
         reply_markup=keyboard,
@@ -99,23 +133,29 @@ async def statemend_help(message: types.Message):
     logging.info(f"/statement обработан для пользователя {full_name}")
 
 
-@dp.message(Command("reference"))
-async def statemend_help(message: types.Message):
-    logging.info("Обработан /referemce командой.")
-    full_name = message.from_user.full_name or "Гость"
-    keyboard = InlineKeyboardMarkup(inline_keyboard=[ 
-        [InlineKeyboardButton(text="Каникулярдык справка", url = "https://drive.google.com/file/d/1VLt9X84a0QcJFMWro4jTSUvypSJ51iL6/view?usp=sharing")],
-        [InlineKeyboardButton(text="Окуп жатканын тастыктоочу ", url = "https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg")],
-   
-    ])
+
+@dp.message(F.text)
+async def echo_message(message: types.Message):
     await message.answer(
-        text=f"Урматтуу , {markdown.hbold(full_name)},маалымкаттарды чыгаруу боюнча маалыматтар бул жерде ",
+        text="Wait a second..."
+        )
+    await message.answer(message.text) 
+    url = "https://cdn-icons-png.flaticon.com/512/4711/4711987.png"
+    full_name = message.from_user.full_name or "Гость"
+    username = message.from_user.username or "Unknown"
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="Сунуш, арыздарыныз болсо ушул баскычты басып калтырыңыз", callback_data="feedback")],
+        [InlineKeyboardButton(text="Маалымкаттар (справка)", callback_data="reference")],
+        [InlineKeyboardButton(text="Арыздардын үлгүлөрү", callback_data="statement")]
+    ])
+
+    await message.answer(
         parse_mode=ParseMode.HTML,
-        reply_markup=keyboard,
+        text=f"""{markdown.hide_link(url)}Саламатсызбы, {markdown.hbold(full_name)}, мен МФТИТ тарабынан түзүлгөн жардамчы ботмун, эгерде жардам керек болсо төмөндөгү командаларды басыңыз""",
+        reply_markup=keyboard
     )
-    logging.info(f"/reference обработан для пользователя {full_name}")
-
-
+    logging.info(f"/start обработан для пользователя {full_name}")
 
 
 # Основной метод запуска бота
@@ -130,6 +170,11 @@ async def main() -> None:
     finally:
         await bot.session.close()
         logging.info("Бот остановлен.")
+
+
+
+
+
 
 if __name__ == "__main__":
     asyncio.run(main())
