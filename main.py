@@ -104,7 +104,7 @@ async def handle_feedback(callback_query: types.CallbackQuery):
 async def reference_help(callback_query: types.CallbackQuery):
     full_name = callback_query.from_user.full_name or "Гость"
     keyboard = InlineKeyboardMarkup(inline_keyboard=[ 
-        [InlineKeyboardButton(text="Каникулярдык справка", url="https://drive.google.com/file/d/1VLt9X84a0QcJFMWro4jTSUvypSJ51iL6/view?usp=sharing")],
+        [InlineKeyboardButton(text="Каникулярдык справка", callback_data="spravka_k" )],
         [InlineKeyboardButton(text="Окуп жатканын тастыктоочу ", url="https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg")],
     ])
     await callback_query.message.answer(
@@ -113,6 +113,32 @@ async def reference_help(callback_query: types.CallbackQuery):
         reply_markup=keyboard,
     )
     logging.info(f"/reference обработан для пользователя {full_name}")
+
+
+
+
+
+
+
+@dp.callback_query(lambda c: c.data == "spravka_k")
+async def statement_help(callback_query: types.CallbackQuery):
+    full_name = callback_query.from_user.full_name or "Гость"
+    
+    await callback_query.message.answer(
+        text=f"Урматтуу , {markdown.hbold(full_name)},каникулярдык справканын үлгүлөрүн ушул шилтеме аркылуу ала аласыз https://drive.google.com/file/d/1VLt9X84a0QcJFMWro4jTSUvypSJ51iL6/view?usp=sharing",
+        parse_mode=ParseMode.HTML,
+    )
+    logging.info(f"/statement обработан для пользователя {full_name}")
+
+
+
+
+
+
+
+
+
+
 
 # Обработчик образцов заявлений
 @dp.callback_query(lambda c: c.data == "statement")
@@ -139,7 +165,6 @@ async def echo_message(message: types.Message):
     await message.answer(
         text="Wait a second..."
         )
-    await message.answer(message.text) 
     url = "https://cdn-icons-png.flaticon.com/512/4711/4711987.png"
     full_name = message.from_user.full_name or "Гость"
     username = message.from_user.username or "Unknown"
@@ -152,10 +177,11 @@ async def echo_message(message: types.Message):
 
     await message.answer(
         parse_mode=ParseMode.HTML,
-        text=f"""{markdown.hide_link(url)}Саламатсызбы, {markdown.hbold(full_name)}, мен МФТИТ тарабынан түзүлгөн жардамчы ботмун, эгерде жардам керек болсо төмөндөгү командаларды басыңыз""",
+        text=f"""{markdown.hide_link(url)}Урматтуу, {markdown.hbold(full_name)}, мен МФТИТ тарабынан түзүлгөн жардамчы ботмун, эгерде жардам керек болсо төмөндөгү командаларды басыңыз 
+{message.text}-бул сөздү биздин бот тааныган жок""",
         reply_markup=keyboard
     )
-    logging.info(f"/start обработан для пользователя {full_name}")
+    logging.info(f"/start обработан для пользователя {full_name}") 
 
 
 # Основной метод запуска бота
