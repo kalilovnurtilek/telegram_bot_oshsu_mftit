@@ -146,8 +146,8 @@ async def statement_help(callback_query: types.CallbackQuery):
     full_name = callback_query.from_user.full_name or "Гость"
     keyboard = InlineKeyboardMarkup(inline_keyboard=[ 
         [InlineKeyboardButton(text="Академиялык өргүүгө чыгуу үчүн арыз", url="https://drive.google.com/file/d/1VLt9X84a0QcJFMWro4jTSUvypSJ51iL6/view?usp=sharing")],
-        [InlineKeyboardButton(text="Академиялык өргүүдөн кайтуу үчүн арыз", url="https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg")],
-        [InlineKeyboardButton(text="Сабактардан уруксат сураа үчүн арыз", url="https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg")],
+        [InlineKeyboardButton(text="Академиялык өргүүдөн кайтуу үчүн арыз", url="https://docs.google.com/document/d/1rQ2H40e2rXUZfLBfnCR70bqS3AqhmjXD/edit?usp=sharing&ouid=112907680449529887487&rtpof=true&sd=true")],
+        [InlineKeyboardButton(text="Сабактардан уруксат сураа үчүн арыз", url="https://docs.google.com/document/d/1BdkDy2oc20YBbuzj1rhByXenZo9-IVGL/edit?usp=sharing&ouid=112907680449529887487&rtpof=true&sd=true")],
         [InlineKeyboardButton(text="Фамилияны avn ден өзгөртүү үчүн арыз", url="https://drive.google.com/file/d/1D7UGgqOACZoByGkjlJ3JdEHup11Hsm-P/view?usp=sharing")],
         [InlineKeyboardButton(text="Окуудан четтетүү үчүн арыз", url="https://drive.google.com/file/d/1OBHGfo77DYpjefORGp_XoqnWctQLL_mX/view?usp=sharing")]
     ])
