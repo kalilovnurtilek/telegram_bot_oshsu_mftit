@@ -105,7 +105,7 @@ async def reference_help(callback_query: types.CallbackQuery):
     full_name = callback_query.from_user.full_name or "Гость"
     keyboard = InlineKeyboardMarkup(inline_keyboard=[ 
         [InlineKeyboardButton(text="Каникулярдык справка", callback_data="spravka_k" )],
-        [InlineKeyboardButton(text="Окуп жатканын тастыктоочу ", url="https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg")],
+        [InlineKeyboardButton(text="Окуп жатканын тастыктоочу справка ",callback_data="spravka_k2")],
     ])
     await callback_query.message.answer(
         text=f"Урматтуу , {markdown.hbold(full_name)},маалымкаттарды чыгаруу боюнча маалыматтар бул жерде",
@@ -115,7 +115,15 @@ async def reference_help(callback_query: types.CallbackQuery):
     logging.info(f"/reference обработан для пользователя {full_name}")
 
 
-
+@dp.callback_query(lambda c: c.data == "spravka_k2")
+async def statement_help(callback_query: types.CallbackQuery):
+    full_name = callback_query.from_user.full_name or "Гость"
+    
+    await callback_query.message.answer(
+        text=f"Урматтуу , {markdown.hbold(full_name)},окуп жаткандыгын тастыктоочу справканын сиз башкы корпустун 301-кабинетинен ала аласыз",
+        parse_mode=ParseMode.HTML,
+    )
+    logging.info(f"/statement обработан для пользователя {full_name}")
 
 
 
@@ -160,28 +168,28 @@ async def statement_help(callback_query: types.CallbackQuery):
 
 
 
-@dp.message(F.text)
-async def echo_message(message: types.Message):
-    await message.answer(
-        text="Wait a second..."
-        )
-    url = "https://cdn-icons-png.flaticon.com/512/4711/4711987.png"
-    full_name = message.from_user.full_name or "Гость"
-    username = message.from_user.username or "Unknown"
+# @dp.message(F.text)
+# async def echo_message(message: types.Message):
+#     await message.answer(
+#         text="Wait a second..."
+#         )
+#     url = "https://cdn-icons-png.flaticon.com/512/4711/4711987.png"
+#     full_name = message.from_user.full_name or "Гость"
+#     username = message.from_user.username or "Unknown"
 
-    keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="Сунуш, арыздарыныз болсо ушул баскычты басып калтырыңыз", callback_data="feedback")],
-        [InlineKeyboardButton(text="Маалымкаттар (справка)", callback_data="reference")],
-        [InlineKeyboardButton(text="Арыздардын үлгүлөрү", callback_data="statement")]
-    ])
+#     keyboard = InlineKeyboardMarkup(inline_keyboard=[
+#         [InlineKeyboardButton(text="Сунуш, арыздарыныз болсо ушул баскычты басып калтырыңыз", callback_data="feedback")],
+#         [InlineKeyboardButton(text="Маалымкаттар (справка)", callback_data="reference")],
+#         [InlineKeyboardButton(text="Арыздардын үлгүлөрү", callback_data="statement")]
+#     ])
 
-    await message.answer(
-        parse_mode=ParseMode.HTML,
-        text=f"""{markdown.hide_link(url)}Урматтуу, {markdown.hbold(full_name)}, мен МФТИТ тарабынан түзүлгөн жардамчы ботмун, эгерде жардам керек болсо төмөндөгү командаларды басыңыз 
-{message.text}-бул сөздү биздин бот тааныган жок""",
-        reply_markup=keyboard
-    )
-    logging.info(f"/start обработан для пользователя {full_name}") 
+#     await message.answer(
+#         parse_mode=ParseMode.HTML,
+#         text=f"""{markdown.hide_link(url)}Урматтуу, {markdown.hbold(full_name)}, мен МФТИТ тарабынан түзүлгөн жардамчы ботмун, эгерде жардам керек болсо төмөндөгү командаларды басыңыз 
+# {message.text}-бул сөздү биздин бот тааныган жок""",
+#         reply_markup=keyboard
+#     )
+#     logging.info(f"/start обработан для пользователя {full_name}") 
 
 
 # Основной метод запуска бота
